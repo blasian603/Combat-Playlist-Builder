@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BODYCOMBAT">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>BODYCOMBAT Playlist Builder</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;background:linear-gradient(135deg,#0a0a0f,#0f0f1a 40%,#0d0614);font-family:'Barlow Condensed',Impact,'Arial Narrow',Arial,sans-serif;color:#e8e8f0;padding-bottom:60px}
+    #header{background:linear-gradient(90deg,#1a0a2e,#0d0614 50%,#1a0a0a);border-bottom:2px solid #7c3aed;padding:20px 20px 14px;position:sticky;top:0;z-index:100;box-shadow:0 4px 32px rgba(124,58,237,.3)}
+    #header-inner{max-width:920px;margin:0 auto}
+    .title-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+    h1{font-size:clamp(1.9rem,5vw,2.8rem);font-weight:900;letter-spacing:.08em;text-transform:uppercase;background:linear-gradient(90deg,#a855f7,#ec4899,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+    .sub{font-size:.88rem;letter-spacing:.22em;color:#9ca3af;text-transform:uppercase}
+    .progress-row{display:flex;align-items:center;gap:10px;margin-top:10px}
+    .progress-bar{flex:1;height:6px;background:#1e1e2e;border-radius:99px;overflow:hidden}
+    .progress-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#ec4899,#f97316);border-radius:99px;transition:width .4s;width:0%}
+    .progress-label{font-size:.88rem;color:#9ca3af;white-space:nowrap}
+    #main{max-width:920px;margin:0 auto;padding:0 14px}
+    .panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:13px 16px;margin-top:11px}
+    .panel.accent{border-color:rgba(124,58,237,.45)}
+    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .label-sm{font-size:.86rem;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af}
+    .label-md{font-size:.94rem;color:#6b7280}
+    .range-badge{font-size:.88rem;color:#a855f7;margin-left:auto}
+    .range-badge.dim{color:#6b7280}
+    .error-msg{font-size:.88rem;color:#f87171;margin-top:5px}
+    input[type="number"],input[type="text"]{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:6px 10px;color:#e8e8f0;font-size:1rem;font-family:inherit;outline:none;-webkit-appearance:none}
+    input[type="number"]{width:66px;text-align:center}
+    input[type="text"]{flex:1;min-width:130px}
+    input::placeholder{color:#4b5563}
+    input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+    select{background:#0e0e1a;border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:7px 24px 7px 8px;color:#e8e8f0;font-size:.96rem;font-family:inherit;outline:none;cursor:pointer;flex:1;min-width:0;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+    select.dim{color:#6b7280}
+    select:disabled{opacity:.4;cursor:default}
+    .btn{border-radius:6px;padding:7px 14px;font-size:.94rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit;border:1px solid transparent;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+    .btn-purple{background:rgba(124,58,237,.2);border-color:rgba(124,58,237,.5);color:#c084fc}
+    .btn-red{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#f87171}
+    .btn-ghost{background:none;border:none;color:#6b7280;font-size:.94rem;cursor:pointer;font-family:inherit}
+    .btn-save{background:linear-gradient(90deg,#7c3aed,#a855f7);color:#fff}
+    .btn-copy{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);color:#d1d5db}
+    .btn-copy.copied{background:rgba(74,222,128,.2);border-color:#4ade80;color:#4ade80}
+    .btn-saved-list{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#9ca3af}
+    .btn-load{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.3);color:#c084fc}
+    .btn-del{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:#f87171}
+    .btn-random-all{flex:1;font-size:1.08rem;padding:12px 18px;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff}
+    .btn-random-all:disabled{opacity:.7;cursor:default}
+    .btn-dice-green{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);color:#4ade80;border-radius:6px;padding:6px 9px;font-size:1.05rem;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;-webkit-tap-highlight-color:transparent}
+    .btn-dice-purple{background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.35);color:#c084fc;border-radius:6px;padding:7px 9px;font-size:1.05rem;cursor:pointer;flex-shrink:0;line-height:1;font-family:inherit;-webkit-tap-highlight-color:transparent}
+    .btn-dice-green:disabled,.btn-dice-purple:disabled{color:#4b5563;cursor:default}
+    .type-toggle{display:flex;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.1)}
+    .type-btn{flex:1;padding:7px 14px;font-size:.92rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit;border:none;background:rgba(255,255,255,.04);color:#6b7280;transition:all .15s;-webkit-tap-highlight-color:transparent}
+    .type-btn.active-standing{background:rgba(234,179,8,.18);color:#fbbf24}
+    .type-btn.active-groundwork{background:rgba(59,130,246,.18);color:#60a5fa}
+    .type-hint{font-size:1rem;color:#6b7280}
+    .warmup-group{border:1px solid rgba(74,222,128,.2);border-left:3px solid #4ade80;border-radius:10px;overflow:hidden;background:rgba(74,222,128,.03);margin-top:7px}
+    .warmup-header{padding:7px 14px;border-bottom:1px solid rgba(74,222,128,.12);display:flex;align-items:center;gap:8px}
+    .warmup-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.15em;color:#4ade80;font-weight:700}
+    .warmup-hint{font-size:.8rem;color:#6b7280}
+    .warmup-slot{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.05)}
+    .warmup-slot:last-child{border-bottom:none}
+    .track-card{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-left:3px solid #333;border-radius:10px;padding:10px 12px;margin-top:7px;transition:all .2s}
+    .track-label-wrap{min-width:78px;flex-shrink:0}
+    .track-label{font-size:.74rem;text-transform:uppercase;letter-spacing:.15em;font-weight:700}
+    .track-name{font-size:.8rem;color:#6b7280;line-height:1.3;margin-top:1px}
+    .track-rel{font-size:.72rem;color:#7c3aed;margin-top:2px;font-weight:700;letter-spacing:.05em}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:#374151;flex-shrink:0;transition:all .2s}
+    .save-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .saved-list{padding:0;overflow:hidden}
+    .saved-item{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05)}
+    .saved-item:last-child{border-bottom:none}
+    .saved-name{flex:1;font-size:1.02rem}
+    .footer{margin-top:22px;font-size:.8rem;color:#4b5563;text-align:center;line-height:1.6;padding-bottom:10px}
+  </style>
+</head>
+<body>
+<div id="header">
+  <div id="header-inner">
+    <div class="title-row">
+      <span style="font-size:34px">&#x1F94A;</span>
+      <div><h1>BODYCOMBAT</h1><div class="sub">Playlist Builder</div></div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">0/10 tracks</div>
+    </div>
+  </div>
+</div>
+<div id="main">
+  <div class="panel" id="library-panel">
+    <div class="row">
+      <span class="label-sm">&#x1F4E6; My Library</span>
+      <span class="label-md">Oldest: BC</span>
+      <input type="number" id="oldest-input" min="1" placeholder="e.g. 45">
+      <span class="label-md">Newest: BC</span>
+      <input type="number" id="newest-input" min="1" placeholder="e.g. 107">
+      <button class="btn btn-purple" onclick="applyRange()">Set</button>
+      <button class="btn btn-ghost" id="clear-range-btn" onclick="clearRange()" style="display:none">&#x2715; Clear</button>
+      <span class="range-badge dim" id="range-badge">All releases</span>
+    </div>
+    <div class="error-msg" id="range-error" style="display:none"></div>
+  </div>
+  <div class="panel">
+    <div class="row">
+      <span class="label-sm">&#x1F94B; Track 5 style:</span>
+      <div class="type-toggle">
+        <button class="type-btn active-standing" id="btn-standing" onclick="setT5Type('standing')">&#x26A1; Standing</button>
+        <button class="type-btn" id="btn-groundwork" onclick="setT5Type('groundwork')">&#x1F535; Groundwork</button>
+      </div>
+      <span class="type-hint" id="t5-hint">Random uses standing options only</span>
+    </div>
+  </div>
+  <div class="panel" style="display:flex;gap:8px">
+    <button class="btn btn-random-all" id="random-all-btn" onclick="randomizeAll()">&#x1F3B2; Random Playlist</button>
+    <button class="btn btn-red" style="padding:12px 16px" onclick="clearPlaylist()">Clear</button>
+  </div>
+  <div id="warmup-slots" style="margin-top:7px"></div>
+  <div id="track-cards"></div>
+  <div class="panel save-row">
+    <input type="text" id="playlist-name" placeholder="Name this class&hellip;">
+    <button class="btn btn-save" onclick="savePlaylist()">&#x1F4BE; Save</button>
+    <button class="btn btn-copy" id="copy-btn" onclick="copyPlaylist()">&#x1F4CB; Copy</button>
+    <button class="btn btn-saved-list" id="saved-btn" onclick="toggleSaved()" style="display:none">&#x1F4DA; Saved (0)</button>
+  </div>
+  <div class="panel saved-list" id="saved-list" style="display:none;padding:0;margin-top:8px"></div>
+  <div class="footer">BC1&ndash;BC107 &middot; Not affiliated with Les Mills</div>
+</div>
+<script>
+const BC_DATA={"1":{"1a":"My Heart Will Go On","2":"Ready Or Not","3":"Barracuda","4":"We Will Rock You","5_standing":[{"song":"You're My Heart,You're My Soul","label":null}],"6":"Shake A Tail Feather","7":"Another One Bites The Dust","8":"Bad Case Of Loving You","9":"You're My Heart, You're My Soul","10":"Music"},"2":{"1a":"Eye Of The Tiger","2":"Its My Life","3":"Gonna Make You Sweat","4":"Revolution","5_standing":[{"song":"Frozen","label":null}],"6":"Manic","7":"Techno","8":"Footloose","9":"Living In America","10":"Du Hast"},"3":{"1a":"I Was Born To Love You","2":"You Rreally Got Me","3":"Get Ready For This","4":"Mambo No","5_standing":[{"song":"Alright Now","label":null}],"6":"Far From Over","7":"Nervous Breakdown","8":"Simply Irresistable","9":"Livin' La Vida Loca","10":"Time To Say Goodbye"},"4":{"1a":"The Immortals","2":"I Can't Stand It","3":"No Limit","4":"Tush","5_standing":[{"song":"Larger Than LIfe","label":null}],"6":"Lethal Droids","7":"Its On You","8":"Grease Lightning","9":"Ice Ice Baby","10":"Live and let die"},"5":{"1a":"Total Eclipse Of The Heart","2":"Don't Leave Me tThis Way","3":"Everybody Get uUp","4":"I Was mMade For Loving You","5_standing":[{"song":"Ghostbusters","label":null}],"6":"Stomp tTo My bBeat","7":"Countdown","8":"Great Balls Of Fire","9":"We Will Rock yYou","10":"Mission Impossible"},"6":{"1a":"I Don't Want To Miss aA tThing","2":"Tubthumping","3":"Freak Out","4":"Sex Bomb","5_standing":[{"song":"Te Quiero Buenos Aires","label":null}],"6":"Rofo's Theme","7":"Call Me (99 summer mix)","8":"Ballroom Blitz","9":"Twist And Shout","10":"Who Wants To Live Forever"},"7":{"1a":"Twilight Zone","2":"Don't You (Forget About Me)","3":"Phatt Bass (The Blade Theme)","4":"Get Over It","5_standing":[{"song":"Relax","label":null}],"6":"Fire","7":"Jump","8":"Jailhouse Rock","9":"Freestyler","10":"I'd Do Anything For Love"},"8":{"1a":"Against All Odds","2":"Sandstorm","3":"Cum On Feel The Noize","4":"Baby I'm On Fire","5_standing":[{"song":"Ihr Seid So Leise","label":null}],"6":"Let's Go Crazy","7":"U drive me crazy","8":"Playing In A Travelling Band","9":"Get Another Boyfriend","10":"The Saint"},"9":{"1a":"Shout (Japan Remix)","2":"Samba De Janiero","3":"Partyalarm (Und Ab Geht's)","4":"Walking On Sunshine","5_standing":[{"song":"The Call (Thunderpuss Mix)","label":null}],"6":"Garota de Berlim","7":"Kung Fu Fighting","8":"Far From Over","9":"The Wild Boys","10":"Adios Nonino Orquesta\u2026"},"10":{"1a":"The Revolution","2":"Just Can't Get Enough","3":"Get Ready For This","4":"Mi Perro Dinamita Patricio Rey y Los","5_standing":[{"song":"My Sharona","label":null}],"6":"Dancing With Myself","7":"Right Type Of Mood","8":"If Ya Getting Down","9":"I Love Rock \u2018n Roll","10":"Funiculi Funicula"},"11":{"1a":"Let's Dance","2":"Game Over","3":"We're Not Gonna Take It","4":"Lady Marmalade","5_standing":[{"song":"Excalibur","label":null}],"6":"Smoke On The Water","7":"Survivor","8":"Loaded","9":"Heaven's On Fire","10":"Sing"},"12":{"1a":"Shape Of My Heart","2":"Electric Avenue","3":"Rock, Rocking The Spot","4":"There You'll Be","5_standing":[{"song":"Beat It","label":null}],"6":"Because We Can","7":"Long Train Running","8":"Rock da Bass Ultimate","9":"God Gave Me Everything","10":"Bohemian Rhapsody"},"13":{"1a":"Drowning","2":"Dance The Planet","3":"Call Me Manana","4":"Runaway","5_standing":[{"song":"Funky Town (Dance Remix)","label":null}],"6":"No Satisfaction","7":"Sledgehammer (Illicit Mix)","8":"Symphony No 9","9":"99 Red Balloons","10":"Tarakihi"},"14":{"1a":"Wild Boys (Wilder Than Wild Boys)","2":"Smooth Criminal","3":"Spiderman","4":"New Sensation","5_standing":[{"song":"Big In Japan","label":null}],"6":"Bites Da Dust","7":"Our Reservation","8":"Furia","9":"Another Brick In The Wall","10":"Fallin'"},"15":{"1a":"Sometimes","2":"Impossible Mission","3":"Calling From Tokyo","4":"R U Ready For War","5_standing":[{"song":"Sweet Dreams","label":null}],"6":"Devoted (O Sole Mio)","7":"Shake","8":"Ride On Time","9":"A Little Less Conversation","10":"Purple Rain"},"16":{"1a":"Music Was My First Love","2":"The Whistle Song","3":"Addicted To Love","4":"Blow Ya Mind","5_standing":[{"song":"Faster, Harder, Scooter","label":null}],"6":"Time Of My Life","7":"Jump","8":"Redliner","9":"L'Ultimo Dei Mohicani","10":"Feuer Frei"},"17":{"1a":"The Sound of Silence","2":"Move It","3":"Move your ass","4":"Rhythm is a dancer 2003","5_standing":[{"song":"Operation Blade","label":null}],"6":"Dreamer","7":"Armada","8":"Ludwig is Alive","9":"Back in Black","10":"Anytime, Anywhere"},"18":{"1a":"(I Just) Died In Your Arms","2":"Thunderstruck","3":"Endless Summer","4":"Don't Go","5_standing":[{"song":"Old times rock & roll","label":null}],"6":"Anything for love","7":"Don't Stop","8":"Razzia 2","9":"Not gonna get us","10":"James Bond theme"},"19":{"1a":"I Like Chopin (Rainy Daze)","2":"Never Surrender","3":"Mangas Verdes","4":"Where Are You","5_standing":[{"song":"Friends","label":null}],"6":"Maniac 2002","7":"Tempo","8":"Monstersound","9":"We Are Family","10":"Sorry Seems To Be The Hardest Word"},"20":{"1a":"Slave To The Music","2":"U Can't Touch This","3":"Set You Free - N","4":"Blood Is Pumpin'","5_standing":[{"song":"Sk8er Boy","label":null}],"6":"Cult Of Snap!","7":"I Don't Need Nobody","8":"Baddest Muther","9":"One Of My Kind","10":"Now We Are Free"},"21":{"1a":"Feeling Fine","2":"The Roof Is On Fire","3":"Everyday","4":"Rising Up","5_standing":[{"song":"Dead Ringer For Love","label":null}],"6":"Take My Breath Away","7":"Going Insane","8":"Prince Of Darkness","9":"Somebody To Love","10":"Top Gun Anthem"},"22":{"1a":"If I Were You","2":"Kickstart My Heart","3":"Injected With A Poison (Hixxy's HTID Remix) (Hardcore Till I Die)","4":"Holding Out For A Hero","5_standing":[{"song":"Crashed The Wedding","label":null}],"6":"Shake Ya Shimmy","7":"The 6th Gate","8":"Now Is The Time","9":"Let's Get It Started","10":"Cry Little Sister"},"23":{"1a":"Stuck On You (Club Version)","2":"Rok Da Floor","3":"Field Of Dreams (Hixxy Remix)","4":"Take A Break","5_standing":[{"song":"Rebel Yell","label":null}],"6":"YMCA (Almighty Millenium Mix)","7":"Hardcore Paradise","8":"Retro Rush","9":"Stop The Rock","10":"Breathe Easy"},"24":{"1a":"Glory Of Love","2":"Livin' On A Prayer","3":"I Feel Alive","4":"Sexy (Skitz Short Mixx)","5_standing":[{"song":"She Bangs","label":null}],"6":"Full Metal Jackass","7":"Hit \u2018Em","8":"Nami","9":"Sound Of The Underground","10":"Blaze Of Glory"},"25":{"1a":"Angels (Zander Edit) - Ultra","1b":"Dancing Up A Storm (Skitz Airplay Edit)","2":"Kickin Hard","3":"Luv U More","4":"Jigga Jigga (Flip & Fill Remix)","5_standing":[{"song":"Power Of Love","label":null}],"6":"Sweet Child Of Mine (Cheeky Trax Remix)","7":"Electro Violence","8":"Crescendos Of Ecstasy","9":"War","10":"Red Warrior"},"26":{"1a":"(Something Inside) So Strong","1b":"Kingston Town","2":"Guitar Damage (Short Clubb Mixx)","3":"Scream","4":"Bagpipes (Club Mix)","5_standing":[{"song":"I'm So Excited","label":null}],"6":"Fighter","7":"Rhythm & Police (K","8":"Night Life (Dougal & Gammer Remix)","9":"Pump It","10":"I'll Stand By You"},"27":{"1a":"Shake That (CJ Stone Mix)","1b":"Bom Bom Suenan (Cascada Radio Edit)","2":"Out In The Fields","3":"Genie In A Bottle","4":"Tribal Dance 2","5_standing":[{"song":"Saturday Night's Alright For Fighting","label":null}],"6":"Bad & Sexy (Radio Version)","7":"So What! (M Edit)","8":"Neck Breaker","9":"I Believe In A Thing Called Love","10":"When Love & Hate Collide"},"28":{"1a":"Listen To Your Heart","1b":"Trouble","2":"The Final Countdown","3":"Come With Me (Hixxy Remix)","4":"Push It Again","5_standing":[{"song":"Hymn","label":null}],"6":"Hung Up","7":"Fight","8":"Reach Out","9":"Switch","10":"Because Of You"},"29":{"1a":"Thank You (Radio Edit)","1b":"Smells Like Teen Spirit","2":"Action","3":"Fly Away","4":"Blade (200 Radio Edit)","5_standing":[{"song":"Wasabi","label":null}],"6":"Vogue","7":"The Trooper","8":"Heartbeatz (Re - Con Remix)","9":"Bounce/Shake/Move/Stop!","10":"Broken"},"30":{"1a":"Apache Rocks The Bottom! (Radio Edit)","1b":"Somebody Told Me","2":"We're Not Gonna Take It","3":"Shooting Star","4":"Rock Me Amadeus","5_standing":[{"song":"Shock To The System","label":null}],"6":"Bring The Noise (Short Original Mix)","7":"We Will Rock (Skitz Radio Mix)","8":"Paradise - Hixxy & Re","9":"Paradise City","10":"Because We Believe"},"31":{"1a":"Ready 2 Go (Stagediverz Restarted Radio Mix)","1b":"Rock This Party (Everybody Dance Now)","2":"Save Your Life! (Warp Brothers Radio Edit)","3":"2 Dream","4":"You Give Love A Bad Name","5_standing":[{"song":"Bad Reputation","label":null}],"6":"U + Ur Hand (Clean Version)","7":"We Rock","8":"Back In The UK","9":"Bite The Dust","10":"Hero"},"32":{"1a":"License To Chill (Radio Mixx)","1b":"Dance! (Radio Edit)","2":"School's Out","3":"Dream To Me","4":"Call Me When You're Sober","5_standing":[{"song":"Don't Stop Me Now","label":null}],"6":"Leave Me Alone (I'm Lonely) (Clean Version)","7":"Check Your Head - Ultra","8":"Welcome To The Black Parade","9":"Here I Come","10":"In The Air Tonight"},"33":{"1a":"Think About The Way (Radio Edit)","1b":"Mundian To Bach Ke (Motivo Hi - Lectro Radio Edit)","2":"Everybodys Screaming!!!","3":"Angel Eyes","4":"This Ain't A Scene, It's An Arms Race","5_standing":[{"song":"Girlfriend","label":null}],"6":"Behind The Cow","7":"Run To The Hills","8":"U R My Phantasy (DS Mix)","9":"I'mma Shine","10":"Vienna"},"34":{"1a":"Summermelody (89ers Remix)","1b":"Does The Fish Have Chips?","2":"Thnks Fr Th Mmrs","3":"The Way (Put Your Hand In My Hand)","4":"Lights Out (Chris Vrenna Remix)","5_standing":[{"song":"Elevator","label":null}],"6":"Shut Up And Drive","7":"1 - 2 - 3 - 4 - Ultra","8":"Believe In Me (DJ Breeze Remix)","9":"We Got It Going On (With Big and Rich)","10":"What Have You Done"},"35":{"1a":"Amazed (Pascal mix)","1b":"Tick Tick Boom","2":"The United Vibe","3":"Piece Of Heaven","4":"Jump","5_standing":[{"song":"You can't stop the beat","label":null}],"6":"That's Right","7":"The Pretender","8":"Heaven","9":"I Don't Want To Be In Love (Dance Floor Anthem)","10":"No One (Curtis Lynch Reggae mix)"},"36":{"1a":"Walking In Memphis","1b":"James Bond Theme","2":"Born To Be Wild","3":"Magic Touch (Squad E Mix)","4":"Zombie","5_standing":[{"song":"Don't You Wanna Feel","label":null}],"6":"Bad","7":"Party Non Stop - Ultra","8":"Good To Me - Re","9":"Gonna Fly Now (John X Remix)","10":"World In Union 95"},"37":{"1a":"Summer Of \u201869 - Mega","1b":"I Never Liked You","2":"Beat It","3":"Baby I'll Let You Know","4":"We Will Survive","5_standing":[{"song":"How Far We've Come","label":null}],"6":"Stamp","7":"Let The Beat Control Your Body","8":"Sea Of Love (Hixxy Remix)","9":"Church - T","10":"Our Solemn Hour"},"38":{"1a":"Writing On The Wall","1b":"Because The Night","2":"Try It Again","3":"Like I Feel (Squad E Mix)","4":"Headbangerz Rock Da Club","5_standing":[{"song":"The Best Damn Thing","label":null}],"6":"No Good (Start The Dance)","7":"Raver's Paradise","8":"What Hurts The Most (Al Storm Remix)","9":"When I Grow Up","10":"Say (All I Need)"},"39":{"1a":"The One And Only (Topmodelz Radio Cut)","1b":"Calling All Lovers","2":"Cum On Feel The Noise","3":"Come With Me (Unique Mix)","4":"Jump That Rock (Whatever You Want)","5_standing":[{"song":"Johnny B Goode","label":null}],"6":"So What","7":"Hardcore Angel","8":"Cry For You (Weaver Remix)","9":"I Won't Be Crying","10":"It's All Coming Back To Me Now"},"40":{"1a":"Layla (Caribbean Mix)","1b":"Hot n Cold","2":"I Know Kung Fu","3":"Sweetheart (Squad - E Remix) - Rezonance","4":"Power Of The Mind/Tubthumping","5_standing":[{"song":"Tutti Frutti","label":null}],"6":"Burn It To The Ground","7":"Speed","8":"Set you free (Hixxy Remix) - N","9":"Let it Rock","10":"Use Somebody"},"41":{"1a":"Dragostea Din Tei (DJ Ross Radio Mix) - O","1b":"My Life Would Suck Without You","2":"Music Is Pumpin","3":"Slow & Steady Rush","4":"Enter Sandman/Boom","5_standing":[{"song":"Ballroom Blitz","label":null}],"6":"Let Me Entertain You","7":"Desolation Row","8":"What Do You Want From Me (squad - e remix)","9":"Right Round","10":"Halo"},"42":{"1a":"Numb (RainDropz! Mix)","1b":"I Do Not Hook Up","2":"I Was Made For Loving You","3":"Poison (Al Storm Remix)","4":"Use Me","5_standing":[{"song":"The Anthem","label":null}],"6":"Warrior's Dance","7":"Excalibur 2000 (2000 Radio Mix)","8":"Miracle (SAD Remix)","9":"Fire Burning","10":"Second Chance"},"43":{"1a":"Freedom (Sunset Project Mix)","1b":"Starstrukk","2":"Love Drunk","3":"Send Me An Angel (Weaver Remix)","4":"Fight For Your Right (DJ Anady vs Sander Remix)","5_standing":[{"song":"Without A Fight","label":null}],"6":"Black Pearl (Dave Darrell Radio Edit)","7":"Kick Start My Heart","8":"Overload","9":"Do It Again","10":"Sounds Of Freedom"},"44":{"1a":"Brighter Day (Monday 2 Friday Remix)","1b":"Use Somebody","2":"Energy","3":"The Time Of Our Lives","4":"Paint It Black 2009/GIA (Skitz Clubb Mixx)","5_standing":[{"song":"Ignorance","label":null}],"6":"iNessun Dormai","7":"Metal Kombat For The Mortal Man","8":"Your Shining (Hixxy Remix)","9":"Put Your Hands On Me - Crookers feat Kardinal Offishall & Carla","10":"Doesn't Mean Anything"},"45":{"1a":"No Easy Way Out (Radio Edit)","1b":"Are You Gonna Go My Way (Ti - Mo Remix Edit)","2":"Back To Innocence","3":"Because The Night (Breeze & Unknown Remix)","4":"Take A Look Around","5_standing":[{"song":"Proud Mary","label":null}],"6":"Russian Roulette (Blunatix Meets B - tastic Remix Edit)","7":"Goin' Out Swingin'","8":"See The Light (Styles & Breeze Mix)","9":"I Can Transform Ya","10":"Black Box"},"46":{"1a":"Teenage Dirthouse (Topmodelz Radio Edit)","1b":"Black Betty","2":"Shut Up & Kiss Me","3":"Truly, Madly, Deeply (S&B Remix)","4":"Kalinka (Russian Hit Mix)","5_standing":[{"song":"Contagious","label":null}],"6":"Spitfire","7":"Braveheart 2006","8":"I Surrender (Hixxy Hardcore Remix)","9":"Take It Off","10":"Wait Till You See My Smile"},"47":{"1a":"Dynamite (Kritikal Mass Radio Edit)","1b":"Love The Way You Lie (KM Hands Up Remix)","2":"Let Me Hear You Scream","3":"Make You Mine","4":"Fire","5_standing":[{"song":"The Warriors Code","label":null}],"6":"Feels Like A Prayer (Clubstar Remix)","7":"You're Going Down","8":"Release Me","9":"Beautiful Monster (Full Vocal La La Sessica Mix)","10":"Just The Way You Are"},"48":{"1a":"In My Head (Kris McTwain Remix Edit)","1b":"Airplanes (Kris McTwain Remix Edit)","2":"Smooth Criminal","3":"We Dance On","4":"Come In Hard (Don't Like Rock \u2018N' Roll)","5_standing":[{"song":"If I Were You","label":null}],"6":"Drummer Boy (MoDrums Remix)","7":"The Last Fight","8":"Everywhere (Breeze & UFO Remix)","9":"The Time (Dirty Bit)","10":"The Silence (New Single Mix)"},"49":{"1a":"Down","1b":"New Divide (M & Ace Remix)","2":"Kick In The Teeth","3":"Barbra Streisand","4":"Lord Of The Rings/Hava Nagila","5_standing":[{"song":"Don't Need","label":null}],"6":"Unfaithful (Nivara Remix)","7":"Na Na Na (Na Na Na Na Na Na Na Na Na)","8":"Turn To Me (Supreme & MOB 2010 Remix)","9":"Dance With Me","10":"Somewhere In The World"},"50":{"1a":"More (B&W Edit)","1b":"Rolling In The Deep (Technoposse Remix)","2":"Frozen","3":"What's Up? (Dougal & Gammer Hardcore Mix)","4":"Let It Die","5_standing":[{"song":"Nessaja (Breeze Remix)","label":null}],"6":"Gimmie Dat","7":"Eye Of The Tiger","8":"You're The Feeling (Exclusive HN Mix)","9":"Pause","10":"ISHFWILF"},"51":{"1a":"Give Me Everything (Sunny Dee Remix)","1b":"Loud (Technoposse Remix Edit)","2":"Bark At The Moon","3":"Here Tonight","4":"Another Way To Die","5_standing":[{"song":"Kung Foo Fighting","label":null}],"6":"Where Them Girls At (Mix I)","7":"Born To Kill","8":"Land Of Dance (Sy And Unknown Remix)","9":"Champion","10":"Awake And Alive (Rock Radio Mix)"},"52":{"1a":"Rain Over Me (Technoposse Remix Edit)","1b":"Sexy And I Know It (DJ Shocker Extended Remix)","2":"Crazy Train","3":"When I Close My Eyes (Darren Styles Remix)","4":"Bring Me To Life (Thomas Petersen vs","5_standing":[{"song":"Passenger (AdF Mix)","label":null}],"6":"Ring The Alarm","7":"Seek And Destroy","8":"Falling (Breeze Remix)","9":"First Of The Year (Equinox)","10":"The Fighter"},"53":{"1a":"Written In The Stars (Sunny Dee Remix)","1b":"Are You Ready For This","2":"Rock N Roll All Night","3":"Shine On (Hixxy Remix)","4":"Sweet Dreams","5_standing":[{"song":"True Believer (Styles and Breeze Remix) - E","label":null}],"6":"Swagger Jagger","7":"Blade (Re Con Remix)","8":"Summer Rain","9":"Bangarang","10":"Is Anybody Out There?"},"54":{"1a":"What Doesn't Kill You (Stronger) ( B&W Remix Edit)","1b":"Blow (Web Remix Edit)","2":"Turbulence","3":"Gona Love Me","4":"Paradise City","5_standing":[{"song":"Invincible (Barracuda Album Mix 2012)","label":null}],"6":"DOA","7":"The Switch","8":"Dark Skies","9":"Internet Friends","10":"Payphone"},"55":{"1a":"Back in Time (Basslouder Remix Edit)","1b":"Call Me Maybe (Basslouder Remix Edit)","2":"Bad Girls - Kung","3":"Don't Feel Like Love","4":"Firestarter","5_standing":[{"song":"We No Speak No Americano (Gammer Remix)","label":null}],"6":"Where Have You Been (Smithee Remix Edit)","7":"Let It Rock","8":"For A Lifetime (Breeze Mix)","9":"YOU'RE GONNA LOVE THIS","10":"Battle Scars"},"56":{"1a":"I Cry (Basslouder Remix Edit)","1b":"Don't Wake Me Up (Basslouder Remix Edit)","2":"Welcome To The Jungle","3":"Hymn (Clubstar Mix)","4":"Hello (Radio Edit)","5_standing":[{"song":"Stamp On The Ground (Breeze Remix)","label":null}],"6":"Still Getting It","7":"Raise The Flag","8":"Silence (Darwin Remix)","9":"Shawty Got Moves","10":"Hall Of Fame"},"57":{"1a":"Troublemaker (The Club Waiver Club Mix)","1b":"Dead Or Alive (Live Mix)","2":"Let's Go (Yelawolf, Twista, Busta Rhymes & Lil Jon Ricky Luna Remix)","3":"I'm Alive (Hardcore Mix)","4":"The Phoenix","5_standing":[{"song":"Roll Over Beethoven","label":null}],"6":"This Is Love (Basslouder Remix Edit)","7":"Stand Up For Rock \u2018N' Roll","8":"Feel Alive","9":"I Love It","10":"My Songs Know What You Did In The Dark (Light Em Up)"},"58":{"1a":"Blow Me (One Last Kiss) (Max Kinscheck Remix)","1b":"Scream (Tobi feat","2":"Strobelight (Original)","3":"Shooting Star (Storm's HS Remix)","4":"Bass Laser Digital Ma$$ feat","5_standing":[{"song":"Cold As Ice (Weaver and Suae Intro Mix)","label":null}],"6":"Action","7":"It's A Fight","8":"My Forever Love","9":"People Like Us","10":"Till I Collapse"},"59":{"1a":"I Knew You Were Trouble (DRM Remix)","1b":"Everything About You (Danceboy Remix Edit)","2":"Danger Zone","3":"Be The One","4":"A Warrior's Call","5_standing":[{"song":"Bright Like The Sun","label":null}],"6":"Danger Zone","7":"Lost in the Space","8":"Falling From The Sky","9":"Do Or Die","10":"Fleurs Du Mal"},"60":{"1a":"Hit Me With Your Best Shot (Basslouder Remix Edit)","1b":"Roar (Bass Rayders Remix Edit)","2":"Black Or White (Combat Remix)","3":"Fly Away","4":"Emergency (Clockwork Remix)","5_standing":[{"song":"Rise Again (Sy and Unknown Remix)","label":null}],"6":"What's Love (Kandy Man Remix Edit)","7":"Kryptonite","8":"Sunshine On A Cloudy Day (Eufeion Remix)","9":"You're The Best","10":"Now We Are Free"},"61":{"1a":"Wrecking Ball (MaLu Project Remix Edit)","1b":"Beautiful Monster (Damn - R Remix)","2":"Shot Me Down","3":"Every Breath You Take","4":"So What (M Edit)","5_standing":[{"song":"Stairway To Heaven (Original Mix)","label":null}],"6":"Get Low","7":"Ready To Rock","8":"Like A Rainbow (Sy & Unknown Remix)","9":"Watch Out For This (Bumaye)","10":"Heart Of A Warrior"},"62":{"1a":"Someone Like You (Kris McTwain Radio Edit) - N","1b":"Home Alone (Invader! Remix Edit)","2":"Famous Last Words","3":"Give A Little Love","4":"Dark Horse (Hard Dance Alliance Mix)","5_standing":[{"song":"Crash","label":null}],"6":"Y.A.L.A.","7":"Let The Beat Go (Single)","8":"Power Of Love","9":"Kingz (Single)","10":"I Was Here"},"63":{"1a":"Get Ready (Steve Aoki Vocal Radio Edit)","1b":"Survival Of The Fittest (Radio Edit)","2":"Badboi","3":"Get A Way","4":"Edge Of A Revolution","5_standing":[{"song":"Holdin' On Right Now","label":null}],"6":"Fight The Resistance","7":"Dead!","8":"Shine (JBC Remix)","9":"Three Strikes","10":"A New Way To Bleed (Photek Remix)"},"64":{"1a":"Freaks","1b":"Can't You See","2":"I'm Shipping Up To Boston","3":"You've Got The Love (Breeze & Modulate Remix)","4":"Blast Off","5_standing":[{"song":"Hot Right Now (Jag Skillz VIP Mix)","label":null}],"6":"Black Widow","7":"La Nina","8":"If You Surrender","9":"Shell Shocked","10":"Simply Amazing"},"65":{"1a":"We Came To Bang (Radio Edit)","1b":"Levels (VIP Mix)","2":"Ah Yeah So What (Radio Edit)","3":"Lifting Me Higher (Back To 97 Mix)","4":"Enemies","5_standing":[{"song":"No Problem","label":null}],"6":"The Day Is My Enemy","7":"Party Monster","8":"Heart Bleeds - Re","9":"Black And Blue (Smackdown)","10":"Love Me Anyway"},"66":{"1a":"Everybody (Jump Smokers Remix)","1b":"Dibby Dibby Sound (feat","2":"Karate","3":"Titanium","4":"Hey Mama","5_standing":[{"song":"Pieces","label":null}],"6":"Get Over It","7":"The Black Pearl (Rui Festival Edit)","8":"Reach Out","9":"Bounce","10":"Bleeding Out"},"67":{"1a":"I'm An Albatraoz (Sunny Dee Remix)","1b":"Fight For Your Right! (Yelhigh! Remix Edit)","2":"Thnks Fr Th Mmrs","3":"Set You Free (Hixxy Remix) - N","4":"Chopstick (Mado Kara Mieru)","5_standing":[{"song":"Sound Bang","label":null}],"6":"Bottles Up","7":"Breathe","8":"Surrender (Clubland Mix)","9":"Hard","10":"Battle Cry"},"68":{"1a":"Freak","1b":"Break The Rules","2":"Push","3":"On My Way","4":"My Songs Know What You Did In The Dark (Light 'Em Up)","5_standing":[{"song":"Dirty (Metrik Remix)","label":null}],"6":"She Got It (Club Mix)","7":"The United Vibe","8":"Out Of My Hands","9":"Turn Down For What","10":"I See Fire"},"69":{"1a":"Everybody Stand Up","1b":"Nuclear(Dillon Francis Remix)","2":"I'm Alive","3":"Good Times","4":"Say My Name(Dual Thieves Remix)","5_groundwork":[{"song":"Count On Me(Andy C Remix)","label":null}],"6":"Wine Dem","7":"Testify","8":"Watch It Burn","9":"Bring Em Out","10":"Rise Up"},"70":{"1a":"Bust 'Em","1b":"Don't Stop The Madness","1c":"The Thrill","2":"How We Do (Original Mix)","3":"Higher","4":"Kraken (Original Mix)","5_groundwork":[{"song":"Not Giving In (Original Mix)","label":null}],"6":"1 In 100,000 - L","7":"Freak - Re","8":"We Won't Be Alone","9":"Don't Let Me Down","10":"I Need A Dollar"},"71":{"1a":"Give Me Your Love","1b":"Hyper","1c":"Perfect Strangers","2":"Baddest Things","3":"Work It Out","4":"Titans","5_groundwork":[{"song":"Feel The Love","label":null}],"6":"Secrets ? Tiesto & KSHMR Feat","7":"Ocho Cinco","8":"Come Alive","9":"Time","10":"Unstoppable"},"72":{"1a":"Nobody to love(Extended Mix)","1b":"Praise You (Radio Edit)","1c":"Kids","2":"Believer","3":"Sweet Lies","4":"B.O.B.","5_groundwork":[{"song":"Changing","label":null}],"6":"Run?(Beautiful Things) (Highsociety Remix)","7":"Welcome to the Black Parade (Steve Aoki 10th Anniversary Remix)","8":"Let You Go (Brookes Brothers Remix)","9":"Words","10":"Love$ick","5_standing":[{"song":"Slappin\u2019 It (Inner Voice Remix)","label":"Bonus"}]},"73":{"1a":"What Is Love 2016 (Dimitri Vegas & Like Mike Remix) \u2013 Lost Frequencies","1b":"Setting Fires (Blasterjaxx Remix) \u2013 The Chainsmokers feat","1c":"Shut It Down","2":"Mayday \u2013 Kxa","3":"Wild Horses (Matrix & Futurebound Remix) \u2013 Dancing On My Lonesome","4":"Mama Do The Hump \u2013 Rizzle Kicks","5_groundwork":[{"song":"Eternal \u2013 Shapeshifter","label":null}],"6":"Fracture \u2013 Slumberjack feat","7":"New Era \u2013 Andy C","8":"Endorphins (Sub Focus vs Fred V & Grafix Remix) \u2013 Sub Focus feat","9":"Savage \u2013 Whethan feat","10":"Human \u2013 Rag\u2019n\u2019Bone Man","5_standing":[{"song":"Gud Vibrations \u2013 NGHTMRE & SLANDER","label":"Bonus"}]},"74":{"1a":"Rich Boy (Quintino Remix)","1b":"Rebound To The Beat","1c":"Wild Flowers","2":"Going Crazy","3":"Skin (Wilkinson Remix)","4":"Great Spirit","5_groundwork":[{"song":"Bomberdrop","label":null}],"6":"Kiwi","7":"This Time","8":"Happy Alone","9":"Lingua","10":"Whatever It Takes","5_standing":[{"song":"She\u2019s Out Of Her Mind","label":"Bonus"}],"7_extra":[{"song":"Hypnotic","label":"Bonus"}]},"75":{"1a":"Ready (Extended Mix)","1b":"Permanent Vacation","2":"Jump","3":"All Goes Wrong","4":"My Name Is Thunder","5_groundwork":[{"song":"Breathing Underwater (Matrix & Futurebound Remix)","label":null}],"6":"Disbroqueia A Tela","7":"On My Way (Valentino Khan Remix)","8":"Light Us Up (Dossa & Locuzzed Remix)","9":"Marching On","10":"Brother","3_extra":[{"song":"Freefall(VIP)","label":"Bonus"}],"4_extra":[{"song":"See What I See","label":"Bonus"}],"5_standing":[{"song":"Beyond The Wall(The Prototypes Remix)","label":"Bonus"},{"song":"Kaleidoscope","label":"Bonus"}]},"76":{"1a":"HNDZ Up","1b":"Shake That LaLa","2":"All Aboard (Dimitri Vegas & Like Mike Edit)","3":"Who Knows","4":"RL Grime","5_groundwork":[{"song":"Soundbwoy (Sigma Remix)","label":null}],"6":"WHITE LINES","7":"Holy","8":"Ghost","9":"Knock Me Down","10":"Don't Forget Your Roots","3_extra":[{"song":"Getaway(Koven Remix)","label":"Bonus"}],"5_standing":[{"song":"Let 'Em Talk","label":"Bonus"}],"6_extra":[{"song":"Blind Faith","label":"Bonus"}],"8_extra":[{"song":"Suffocate","label":"Bonus"}]},"77":{"1a":"Vegas (Extended Mix)","1b":"Up","2":"MIC Drop","3":"Running Low","4":"Tell Me","5_groundwork":[{"song":"Stay (Maduk Remix)","label":null}],"6":"Magenta Riddim","7":"Beastmode (Original Mix)","8":"Get This Right","9":"Legendary","10":"The Champion","5_standing":[{"song":"Rat A Tat","label":"Bonus"}]},"78":{"1a":"Savage Mode","1b":"Fogo (WRECKVGE Remix)","2":"Earthquake","3":"Stay","4":"Devil","5_groundwork":[{"song":"Worth The Lie","label":null}],"6":"Lonely Boy","7":"Dancehall Soldier","8":"Wings (Nu:Logic Remix)","9":"Young Blood","10":"Sure Don\u2019t Miss You","3_extra":[{"song":"The Siren (Camo & Krooked Remix)","label":"Bonus"}],"4_extra":[{"song":"You\u2019re Gonna Love Again","label":"Bonus"}],"5_standing":[{"song":"Worth The Lie","label":"Bonus"}],"6_extra":[{"song":"Be The One (Netsky Remix)","label":"Bonus"}],"8_extra":[{"song":"Home","label":"Bonus"}]},"79":{"1a":"Knockout","1b":"Made In China","2":"Stockholm White (Perk Pietrek Remix)","3":"Lifeless","4":"Gloves Are Comin' Off","5_groundwork":[{"song":"Love Has Gone","label":null}],"6":"Love & War","7":"2 MUCH","8":"Superhuman (Gammer Remix)","9":"Dies Irae","10":"Warrior"},"80":{"1a":"Bashment Ting","1b":"La La La","2":"Headsprung","3":"Holding Onto Heaven (Kove Remix)","4":"DJ Turn It Up","5_groundwork":[{"song":"Flower/Dare","label":null}],"6":"Run Wild","7":"THE DROP","8":"By Your Side","9":"Midnight","10":"Heads Up"},"81":{"1a":"Drop It Down (Extended Mix)","1b":"Bullet Blowz","2":"Mangalam","3":"Hearts Ain\u2019t Gonna Lie (High Contrast Remix)","4":"Nice Flow (Original Mix)","5_groundwork":[{"song":"False Alarm","label":null}],"6":"How Bad Do You Want It (Oh Yeah)","7":"Public Enemy","8":"Got You There","9":"Tell Me You Love Me (Matrix & Futurebound Remix)","10":"Like I Would (The White Panda Remix)","5_standing":[{"song":"Holding On","label":"Bonus"}]},"82":{"1a":"Turn It Up","1b":"Barraca","2":"Reserve","3":"Pull The Trigger (Maduk Remix)","4":"Lacrimosa","5_groundwork":[{"song":"Different Way","label":null}],"6":"Say My Name","7":"Shellz","8":"Love Wins Again","9":"Jump Around","10":"Power Is Power","5_standing":[{"song":"I Need You Here","label":"Bonus"}]},"83":{"1a":"Awa Ni","1b":"Alive","2":"Pica","3":"Unreal","4":"Y.A.L.A.","5_groundwork":[{"song":"Fuji Opener","label":null}],"6":"Gopher Mambo","7":"Victorious","8":"Real (Drum & Bass Mix)","9":"Burning","10":"Alright","5_standing":[{"song":"All For You","label":"Bonus"}]},"84":{"1a":"Real Good Feeling","1b":"AVA","2":"Dear Future Self (Hands Up)","3":"Magnetic Eyes (Radio Edit)","4":"Shankara (Sunburn Goa 2019 Anthem)","5_groundwork":[{"song":"1995","label":null}],"6":"Life Long After Death (feat","7":"Gasoline","8":"Not Giving In","9":"Mama Said Knock You Out","10":"Will It Go Round in Circles"},"85":{"1a":"Come For It","1b":"Spearhead","2":"Gy'al Ya Shake It","3":"Can't Keep Me Down","4":"Devil A Pray","5_groundwork":[{"song":"Mantra","label":null}],"6":"Brace Up","7":"Bap U","8":"Louder (Hamilton Remix)","9":"Here I Go","10":"Eye On It","4_extra":[{"song":"I Can Flex","label":"Bonus"}],"5_standing":[{"song":"Make Me Stronger","label":"Bonus"}]},"86":{"1a":"Ride it (Dimitri Vegas & Like Mike VS Quintino Remix)","1b":"Give it to Dem","2":"Fiesta! Mashd N Kutcher, Reece Low","3":"Hindsight (Millbrook Remix)","4":"Majesty","5_groundwork":[{"song":"Right Here, Right Now (Friction & Killer Hertz Remix)","label":null}],"6":"Street Fight","7":"The People (Dimatik Remix)","8":"Be Alright","9":"Savage Love (Laxed - Siren Beat)","10":"Surely You Know","6_extra":[{"song":"Head Shoulders Knees & Toes","label":"Bonus"}],"1a_extra":[{"song":"Breaking Fire","label":"Alternate"}],"1b_extra":[{"song":"Give it to Dem","label":"Alternate"}]},"87":{"1a":"Dumb","1b":"In My Soul","2":"Let\u2019s Go","3":"Evolution","4":"Stephanie","5_groundwork":[{"song":"Mariachi","label":null}],"6":"I\u2019m Back","7":"Tarantino","8":"Don\u2019t Say It","9":"Tippy Toe","10":"Where I\u2019m From"},"88":{"1a":"Mi Sento Bien","1b":"Breathe, Stretch, Shake","2":"Trap Requiem (Original Mix)","3":"Ripped To Pieces","4":"Kolkata","5_groundwork":[{"song":"Famalay","label":null}],"6":"Bang!","7":"Bonzai Channel One","8":"Deeper Love (Stonebank Remix)","9":"Strut","10":"Natural"},"89":{"1a":"Like Ah Boss","1b":"Green Light","2":"Jimmy Shake","3":"In A Moment","4":"Lord & Master","5_groundwork":[{"song":"Look At Me Go","label":null}],"6":"Get Ready","7":"WAWA","8":"Good Enough","9":"Whatever I Want","10":"Firefly","5_standing":[{"song":"Feel It","label":"Bonus"}]},"90":{"1a":"Symphony","1b":"Beggin'","2":"Its Goin' Down Tonight","3":"Let Me Go","4":"Flying Dutchman","5_groundwork":[{"song":"Gold Dust (Shy FX Re - Edit)","label":null}],"6":"Make It Look Easy","7":"Offender","8":"All You Ever Wanted (Sub Focus Remix)","9":"Bongo Cha Cha Cha","10":"Fighter"},"91":{"1a":"Hero (DISTO Remix)","1b":"Imma Wildfire","2":"Stay Mine (Gabry Ponte Remix)","3":"Alone","4":"Energy","5_groundwork":[{"song":"Holdin' On (Skrillex & Nero Remix)","label":null}],"6":"Odin","7":"Team","8":"Alive","9":"INDUSTRY BABY","10":"I Am Fearless"},"92":{"1a":"Ready Or Not Here I Come","1b":"My Way","2":"Pum Pum (Da Tweekaz Remix)","3":"Hope","4":"The Search","5_groundwork":[{"song":"Pick A Side","label":null}],"6":"Voices","7":"Incoming","8":"All For Nothing","9":"2 Legit 2 Quit","10":"Chain Of Fools"},"93":{"1a":"Burn It To The Ground","1b":"Tick Tick Boom","2":"Real Ones (QUIX Remix)","3":"That's On You","4":"Shadows","5_groundwork":[{"song":"Like A Boss","label":null}],"6":"Watch Me Go","7":"Incoming","8":"Catharsis X","9":"I Got It","10":"Hold My Hand"},"94":{"1a":"Feel The Fire","1b":"here we go again","2":"Reason For Fighting","3":"Unbreakable","4":"Fire Emoji","5_groundwork":[{"song":"Running Up That Hill","label":null}],"6":"Follow On","7":"What's Your Name","8":"Wait For You (Matrix & Futurebound Remix)","9":"Masaya","10":"This Is Where We Come Alive","5_standing":[{"song":"Drip","label":"Bonus"}]},"95":{"1a":"Brutal","1b":"Hurricane (Festival Mix)","2":"Mercy","3":"Falling Apart","4":"Turn The Music Up","5_groundwork":[{"song":"Thief (Flux Pavillion Remix)/Big City Life","label":null}],"6":"Dolls","7":"Wasabi (Extended Mix)","8":"Release (Fred V Remix)","9":"Betty (Get Money)","10":"Missing Out (The Midnight Remix)"},"96":{"1a":"So High","1b":"Low","2":"La La La","3":"Miss You","4":"Walk This Way (Lido Remix)","5_groundwork":[{"song":"Party Up (Cavalry Remix)/Find Me (Sigma VIP Remix)","label":null}],"6":"Coming Back Stronger","7":"Follow","8":"WANT NEED LOVE (Dimension Remix)","9":"Intro","10":"Calm Down"},"97":{"1a":"Rainfall (Praise You) (K Motionz Remix)","1b":"Quiet Storm","2":"You Belong To Me","3":"Lean On You","4":"Danger","5_groundwork":[{"song":"IFTK/Only You","label":null}],"6":"Rave De Favela","7":"Sharp Shooter","8":"Perfect Sky","9":"DESPECH\u00c1","10":"pretend"},"98":{"1a":"Salt (Toby Green Remix)","1b":"Bonkers","2":"Sorry I'm Not Sorry","3":"So Much In Love (Sub Focus Remix)","4":"New Generation","5_groundwork":[{"song":"Nothing Else (When I Think Of You) (BEATFREAKZ Remix)_Elemental","label":null}],"6":"Tembla","7":"Rhyme Dust (Dimension Remix)","8":"Paradise","9":"No Choice","10":"Makin' It Mine"},"99":{"1a":"Dance With Somebody","1b":"Oldskool","2":"Bumba Bass","3":"Love Will Take You Higher","4":"Conqueror","5_groundwork":[{"song":"TOO BIZARRE (juked)/Sweet Disposition","label":null}],"6":"Jericho","7":"It's That Time (Dimension Remix)","8":"Past Life (Koven Remix)","9":"Fired Up","10":"Lose Control (Strings Version)"},"100":{"1a":"Barricade (Radio Edit)","1b":"Tambor","2":"Don't Stop","3":"Make No Sound","4":"Winning Time","5_groundwork":[{"song":"Woofa Killa/Circles","label":null}],"6":"Ravers","7":"We Can't Stop","8":"Ready To Fly","9":"Woke Up This Morning","10":"Bring The Whole Hood","3_extra":[{"song":"Give It All","label":"Bonus"}],"4_extra":[{"song":"I Am The Hype (Dan Aux Remix)","label":"Bonus"}],"6_extra":[{"song":"East Bounce (Extended Mix)","label":"Bonus"}],"7_extra":[{"song":"Run The Show","label":"Bonus"}],"8_extra":[{"song":"Kick It Down","label":"Bonus"}]},"101":{"1a":"Everybody Work (Allison Nunes Remix)","1b":"BRAA","2":"No Rules","3":"Oxygen","4":"GAS","5_groundwork":[{"song":"GO HARD/Hooked","label":null}],"6":"Rain Dance","7":"Let's Get Raving (Instrumental)","8":"Outside Of Love (Skepsis Remix)","9":"Dawn Penn","10":"Don't Kill My Vibe (Gryffin Remix)"},"102":{"1a":"TOMA TOMA","1b":"Que Calor","2":"Body Move","3":"Bring Me Joy","4":"Laserbeam (Eliminate Remix)","5_groundwork":[{"song":"Tough Talk/Come Alive","label":null}],"6":"Rhythm Of The Night","7":"Rave Is Life","8":"Remember (Circadian Remix)","9":"Tambourine","10":"Outside"},"103":{"1a":"Bowser","1b":"Breathe","2":"Like An Animal","3":"Nervous System","4":"I'm A Dragon (Original Mix)","5_groundwork":[{"song":"Quit You/Baila Conmigo","label":null}],"6":"I Wanna Rock","7":"KGM(irl)*","8":"Right Here","9":"Clique","10":"Life"},"104":{"1a":"Crash the Party","1b":"JUMPIN","2":"ZONES","3":"Shiver (Wilkinson Remix)","4":"2003","5_groundwork":[{"song":"Can't Stop/Run (Part 1)","label":null}],"6":"FLEUMM YEHH","7":"Hey Ya!","8":"Not Even Love (MUZZ Remix)","9":"Dare U","10":"MOVIN"},"105":{"1a":"It's A Vibe","1b":"Rock To The Rhythm","2":"Cut Me Loose","3":"Out Of Body","4":"Like That","5_groundwork":[{"song":"Always Dancin' (Fitch Remix)/What Do You Believe In? (High Contrast Remix)","label":null}],"6":"Holy Place","7":"Firebreak (1991 Remix)","8":"Balance","9":"BLENDWISE","10":"Ordinary"},"106":{"1a":"Fighting For","1b":"Noche (Remix)","2":"Rave Tool (Trip Trop Extended Twist)","3":"Polarised","4":"Whole Team Winning","5_groundwork":[{"song":"Don Dada/See It Thru","label":null}],"6":"BZL","7":"Bla Bla - D - Block & S - te","8":"Cry","9":"UNREAL","10":"Sapphire (Unplugged)"},"107":{"1a":"Bring Me Techno","1b":"Overflo","2":"Up Top","3":"Baby, You Make Me Crazy (Friction Remix)","4":"VICTORY","5_groundwork":[{"song":"badboysound/Dominos (Friction Remix)","label":null}],"6":"Glow","7":"Body Work VIP","8":"Freefall","9":"Calabria 2007 (Radio Edit)","10":"Home"}};
+const ALL_RELEASES=Object.keys(BC_DATA).sort((a,b)=>parseInt(a)-parseInt(b));
+const MAX_RELEASE=parseInt(ALL_RELEASES[ALL_RELEASES.length-1]);
+// Warmup is now a single combined track &#8212; release picker fills 1a/1b/1c together
+const WARMUP_IDS=["1a","1b","1c"];
+const STANDARD_TRACKS=[
+  {id:"2", label:"Track 2", name:"Combat 1",         color:"#f97316"},
+  {id:"3", label:"Track 3", name:"Power Training 1", color:"#fb923c"},
+  {id:"4", label:"Track 4", name:"Combat 2",         color:"#ef4444"},
+  {id:"5", label:"Track 5", name:"Power Training 2", color:"#dc2626",isT5:true},
+  {id:"6", label:"Track 6", name:"Combat 3",         color:"#e11d48"},
+  {id:"7", label:"Track 7", name:"Muay Thai",        color:"#9333ea"},
+  {id:"8", label:"Track 8", name:"Power Training 3", color:"#7c3aed"},
+  {id:"9", label:"Track 9", name:"Conditioning",     color:"#2563eb"},
+  {id:"10",label:"Track 10",name:"Cool Down",        color:"#0ea5e9"},
+];
+let oldest="",newest="",t5Type="standing";
+let playlist={},savedList=[],showingSaved=false;
+
+function emptyPlaylist(){
+  const p={};
+  WARMUP_IDS.forEach(id=>{p[id]={release:"",song:"",t5kind:"",label:null};});
+  STANDARD_TRACKS.forEach(t=>{p[t.id]={release:"",song:"",t5kind:"",label:null};});
+  return p;
+}
+playlist=emptyPlaylist();
+
+function getOwned(){
+  return ALL_RELEASES.filter(k=>{
+    const n=parseInt(k),lo=oldest?parseInt(oldest):1,hi=newest?parseInt(newest):MAX_RELEASE;
+    return n>=lo&&n<=hi;
+  });
+}
+
+// Returns releases that have at least 1a, with combined song string
+function warmupReleaseOpts(){
+  return getOwned().reduce((a,r)=>{
+    const s1a=BC_DATA[r]?.["1a"];
+    if(!s1a)return a;
+    const parts=[s1a,BC_DATA[r]?.["1b"],BC_DATA[r]?.["1c"]].filter(Boolean);
+    a.push({rel:r,combined:parts.join(" / ")});
+    return a;
+  },[]);
+}
+// Get individual songs for a release
+function warmupSongsForRelease(rel){
+  return {
+    "1a": BC_DATA[rel]?.["1a"]||"",
+    "1b": BC_DATA[rel]?.["1b"]||"",
+    "1c": BC_DATA[rel]?.["1c"]||"",
+  };
+}
+
+function t5Opts(type){
+  const key="5_"+type;
+  return getOwned().reduce((a,r)=>{
+    const arr=BC_DATA[r]?.[key];
+    if(arr)arr.forEach(o=>a.push({rel:r,song:o.song,kind:type,label:o.label}));
+    return a;
+  },[]);
+}
+
+function t5AllOpts(){return [...t5Opts("standing"),...t5Opts("groundwork")];}
+
+function trackOpts(tid){
+  const opts=[];
+  getOwned().forEach(r=>{
+    const main=BC_DATA[r]?.[tid];
+    if(main)opts.push({rel:r,song:main,label:null});
+    const ex=BC_DATA[r]?.[tid+"_extra"];
+    if(ex)ex.forEach(o=>opts.push({rel:r,song:o.song,label:o.label}));
+  });
+  return opts;
+}
+
+function randomPick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function hexToRgb(h){return parseInt(h.slice(1,3),16)+","+parseInt(h.slice(3,5),16)+","+parseInt(h.slice(5,7),16);}
+
+function setT5Type(type){
+  t5Type=type;
+  document.getElementById("btn-standing").className="type-btn"+(type==="standing"?" active-standing":"");
+  document.getElementById("btn-groundwork").className="type-btn"+(type==="groundwork"?" active-groundwork":"");
+  document.getElementById("t5-hint").textContent=type==="standing"
+    ?"Random uses standing options only"
+    :"Random uses groundwork options only";
+  renderTrackCards();
+}
+
+function renderWarmupCard(){
+  const c=document.getElementById("warmup-slots");c.innerHTML="";
+  const opts=warmupReleaseOpts();
+  const rel=playlist["1a"]?.release||"";
+  const hasWu=!!playlist["1a"]?.song;
+  const rgb="74,222,128";
+
+  const card=document.createElement("div");
+  card.className="track-card";
+  card.style.borderLeftColor=hasWu?"#4ade80":"#333";
+  if(hasWu){
+    card.style.borderColor="#4ade8050";
+    card.style.background="linear-gradient(135deg,rgba("+rgb+",.12),rgba(0,0,0,.4))";
+    card.style.boxShadow="0 2px 14px rgba("+rgb+",.1)";
+  }
+
+  // Combined song display
+  const parts=WARMUP_IDS.map(id=>playlist[id]?.song).filter(Boolean);
+  const songDisplay=parts.length?parts.join(" / "):"";
+
+  const lw=document.createElement("div");lw.className="track-label-wrap";
+  lw.innerHTML='<div class="track-label" style="color:#4ade80">Track 1</div>'
+    +'<div class="track-name">Warm-Up</div>'
+    +(rel?'<div class="track-rel">BC'+rel+'</div>':"");
+
+  // Song display div
+  const songDiv=document.createElement("div");
+  songDiv.style.cssText="flex:1;min-width:0;font-size:1rem;color:"+(hasWu?"#e8e8f0":"#4b5563")+";line-height:1.4;word-break:break-word";
+  songDiv.textContent=songDisplay||"";
+
+  // Release dropdown
+  const sel=document.createElement("select");
+  sel.className=hasWu?"":"dim";
+  sel.style.flex="1";
+  sel.innerHTML='<option value="">-- Pick a release --</option>';
+  opts.forEach(({rel:r,combined})=>{
+    const o=document.createElement("option");
+    o.value=r;
+    o.textContent="BC"+r+" - "+combined;
+    if(r===rel)o.selected=true;
+    sel.appendChild(o);
+  });
+  sel.addEventListener("change",e=>{
+    const chosen=e.target.value;
+    if(!chosen){
+      WARMUP_IDS.forEach(id=>{playlist[id]={release:"",song:"",t5kind:"",label:null};});
+    } else {
+      const songs=warmupSongsForRelease(chosen);
+      WARMUP_IDS.forEach(id=>{
+        playlist[id]=songs[id]?{release:chosen,song:songs[id],t5kind:"",label:null}:{release:"",song:"",t5kind:"",label:null};
+      });
+    }
+    renderAll();
+  });
+
+  const dice=document.createElement("button");
+  dice.className="btn-dice-green";
+  dice.innerHTML="&#x1F3B2;";
+  dice.disabled=!opts.length;
+  dice.addEventListener("click",()=>{
+    if(!opts.length)return;
+    const pick=randomPick(opts);
+    const songs=warmupSongsForRelease(pick.rel);
+    WARMUP_IDS.forEach(id=>{
+      playlist[id]=songs[id]?{release:pick.rel,song:songs[id],t5kind:"",label:null}:{release:"",song:"",t5kind:"",label:null};
+    });
+    renderAll();
+  });
+
+  const dot=document.createElement("div");
+  dot.className="status-dot";
+  dot.style.background=hasWu?"#4ade80":"#374151";
+  dot.style.boxShadow=hasWu?"0 0 6px #4ade80":"none";
+
+  card.append(lw,sel,dice,dot);
+  c.appendChild(card);
+}
+
+function renderWarmupSlots(){renderWarmupCard();}
+
+function renderTrackCards(){
+  const c=document.getElementById("track-cards");c.innerHTML="";
+  STANDARD_TRACKS.forEach(track=>{
+    const p=playlist[track.id],has=!!p.song,rgb=hexToRgb(track.color);
+    const allOpts=track.isT5?t5AllOpts():trackOpts(track.id);
+    const diceOpts=track.isT5?t5Opts(t5Type):allOpts.filter(o=>!o.label);
+    const card=document.createElement("div");
+    card.className="track-card";
+    card.style.borderLeftColor=has?track.color:"#333";
+    if(has){
+      card.style.borderColor=track.color+"50";
+      card.style.background="linear-gradient(135deg,rgba("+rgb+",.12),rgba(0,0,0,.4))";
+      card.style.boxShadow="0 2px 14px rgba("+rgb+",.1)";
+    }
+    let subLine=track.name;
+    if(track.isT5&&p.t5kind){
+      if(p.t5kind==="standing")
+        subLine+=' <span style="color:#fbbf24;font-size:.72rem;font-weight:700">&#x26A1; Standing</span>';
+      else
+        subLine+=' <span style="color:#60a5fa;font-size:.72rem;font-weight:700">&#x1F535; Groundwork</span>';
+    } else if(!track.isT5&&p.label){
+      const lc=p.label==="Alternate"?"color:#a78bfa":"color:#f59e0b";
+      subLine+=' <span style="'+lc+';font-size:.88rem;font-weight:700"> '+p.label.toUpperCase()+'</span>';
+    }
+    const lw=document.createElement("div");lw.className="track-label-wrap";
+    lw.innerHTML='<div class="track-label" style="color:'+track.color+'">'+track.label+'</div>'
+      +'<div class="track-name">'+subLine+'</div>'
+      +(p.release?'<div class="track-rel">BC'+p.release+'</div>':"");
+    const sel=document.createElement("select");
+    sel.className=has?"":"dim";
+    sel.innerHTML='<option value="">-- Pick a song --</option>';
+    if(track.isT5){
+      // Build interleaved options per release within each type group
+      // For each type, collect releases in order, showing main then bonus for that release
+      const buildT5Group=(type)=>{
+        // Get all releases that have this type, in order, interleaved main+bonus
+        const seen=new Set();
+        const items=[];
+        // Go through owned releases in order
+        getOwned().forEach(r=>{
+          const arr=BC_DATA[r]?.["5_"+type];
+          if(arr)arr.forEach(o=>items.push({rel:r,song:o.song,kind:type,label:o.label}));
+        });
+        return items;
+      };
+      const st=buildT5Group("standing");
+      const gw=buildT5Group("groundwork");
+      if(st.length){
+        const g=document.createElement("optgroup");g.label="Standing";
+        st.forEach(({rel,song,kind,label})=>{
+          const o=document.createElement("option");
+          o.value=rel+"::"+song+"::"+kind+"::"+(label||"");
+          o.textContent="BC"+rel+" - "+song+(label?" ["+label+"]":"");
+          if(p.release===rel&&p.song===song&&p.t5kind===kind)o.selected=true;
+          g.appendChild(o);
+        });
+        sel.appendChild(g);
+      }
+      if(gw.length){
+        const g=document.createElement("optgroup");g.label="Groundwork";
+        gw.forEach(({rel,song,kind,label})=>{
+          const o=document.createElement("option");
+          o.value=rel+"::"+song+"::"+kind+"::"+(label||"");
+          o.textContent="BC"+rel+" - "+song+(label?" ["+label+"]":"");
+          if(p.release===rel&&p.song===song&&p.t5kind===kind)o.selected=true;
+          g.appendChild(o);
+        });
+        sel.appendChild(g);
+      }
+    } else {
+      // Interleaved: for each release in order, show main track then bonus/alternate immediately after
+      allOpts.forEach(({rel,song,label})=>{
+        const o=document.createElement("option");
+        o.value=rel+"::"+song+"::"+(label||"");
+        o.textContent="BC"+rel+" - "+song+(label?" ["+label+"]":"");
+        if(p.release===rel&&p.song===song&&(p.label||"")===(label||""))o.selected=true;
+        sel.appendChild(o);
+      });
+    }
+    sel.addEventListener("change",e=>pickSong(track.id,e.target.value,track.isT5));
+    const dice=document.createElement("button");
+    dice.className="btn-dice-purple";
+    dice.innerHTML="&#x1F3B2;";
+    dice.disabled=!diceOpts.length;
+    dice.title=diceOpts.length?"Random "+(track.isT5?t5Type+" ":"")+"from "+diceOpts.length+" options":"No tracks in library";
+    dice.addEventListener("click",()=>track.isT5?randomizeT5():randomizeOne(track.id));
+    const dot=document.createElement("div");
+    dot.className="status-dot";
+    dot.style.background=has?track.color:"#374151";
+    dot.style.boxShadow=has?"0 0 6px "+track.color:"none";
+    card.append(lw,sel,dice,dot);
+    c.appendChild(card);
+  });
+}
+
+function renderAll(){renderWarmupSlots();renderTrackCards();updateProgress();}
+
+function updateProgress(){
+  const wuF=playlist["1a"]?.song?1:0;
+  const stdF=STANDARD_TRACKS.filter(t=>playlist[t.id]?.song).length;
+  const f=wuF+stdF;
+  document.getElementById("progress-fill").style.width=Math.round(f/10*100)+"%";
+  document.getElementById("progress-label").textContent=f+"/10 tracks";
+}
+
+function pickSong(trackId,value,isT5){
+  if(!value){
+    playlist[trackId]={release:"",song:"",t5kind:"",label:null};
+  } else {
+    const p=value.split("::");
+    if(isT5){
+      playlist[trackId]={release:p[0],song:p[1],t5kind:p[2]||"",label:p[3]==="1"?"Bonus":null};
+    } else {
+      // p[2] is label string (e.g. "Bonus", "Alternate", or "")
+      playlist[trackId]={release:p[0],song:p[1],t5kind:"",label:p[2]||null};
+    }
+  }
+  renderAll();
+}
+
+// warmup is now randomized as a unit &#8212; this is called by the dice in renderWarmupCard
+// kept as stub for safety
+function randomizeWarmupSlot(){}
+
+function randomizeT5(){
+  const opts=t5Opts(t5Type);if(!opts.length)return;
+  const p=randomPick(opts);
+  playlist["5"]={release:p.rel,song:p.song,t5kind:p.kind,label:p.label==="Bonus"?"Bonus":null};
+  renderAll();
+}
+
+function randomizeOne(tid){
+  const opts=trackOpts(tid).filter(o=>!o.label);
+  if(!opts.length)return;
+  const p=randomPick(opts);
+  playlist[tid]={release:p.rel,song:p.song,t5kind:"",label:null};
+  renderAll();
+}
+
+function randomizeAll(){
+  const btn=document.getElementById("random-all-btn");
+  btn.disabled=true;btn.textContent="Shuffling...";
+  setTimeout(()=>{
+    const owned=getOwned();
+    const wuRels=owned.filter(k=>BC_DATA[k]?.["1a"]);
+    if(wuRels.length){
+      const wr=randomPick(wuRels);
+      const wuSongs=warmupSongsForRelease(wr);
+      WARMUP_IDS.forEach(id=>{
+        playlist[id]=wuSongs[id]?{release:wr,song:wuSongs[id],t5kind:"",label:null}:{release:"",song:"",t5kind:"",label:null};
+      });
+    }
+    const t5o=t5Opts(t5Type);
+    if(t5o.length){const p=randomPick(t5o);playlist["5"]={release:p.rel,song:p.song,t5kind:p.kind,label:p.label==="Bonus"?"Bonus":null};}
+    STANDARD_TRACKS.filter(t=>!t.isT5).forEach(track=>{
+      const opts=trackOpts(track.id).filter(o=>!o.label);
+      if(opts.length){const p=randomPick(opts);playlist[track.id]={release:p.rel,song:p.song,t5kind:"",label:null};}
+    });
+    renderAll();
+    btn.disabled=false;btn.innerHTML="&#x1F3B2; Random Playlist";
+  },300);
+}
+
+function clearPlaylist(){playlist=emptyPlaylist();renderAll();}
+
+function applyRange(){
+  const lv=document.getElementById("oldest-input").value.trim();
+  const hv=document.getElementById("newest-input").value.trim();
+  const ln=lv?parseInt(lv):null,hn=hv?parseInt(hv):null;
+  const err=document.getElementById("range-error");
+  if(ln&&(ln<1||ln>MAX_RELEASE)){showErr("Oldest must be 1-"+MAX_RELEASE);return;}
+  if(hn&&(hn<1||hn>MAX_RELEASE)){showErr("Newest must be 1-"+MAX_RELEASE);return;}
+  if(ln&&hn&&ln>hn){showErr("Oldest can't be higher than newest");return;}
+  err.style.display="none";oldest=lv;newest=hv;updateRangeBadge();
+  try{localStorage.setItem("bc_oldest",oldest);localStorage.setItem("bc_newest",newest);}catch(e){}
+  renderAll();
+}
+
+function clearRange(){
+  oldest="";newest="";
+  document.getElementById("oldest-input").value="";
+  document.getElementById("newest-input").value="";
+  document.getElementById("range-error").style.display="none";
+  updateRangeBadge();
+  try{localStorage.removeItem("bc_oldest");localStorage.removeItem("bc_newest");}catch(e){}
+  renderAll();
+}
+
+function showErr(m){const e=document.getElementById("range-error");e.textContent=m;e.style.display="block";}
+
+function updateRangeBadge(){
+  const badge=document.getElementById("range-badge"),cb=document.getElementById("clear-range-btn"),panel=document.getElementById("library-panel");
+  const owned=getOwned(),set=oldest||newest;
+  if(set){
+    badge.textContent="BC"+(oldest||"1")+"-BC"+(newest||MAX_RELEASE)+" - "+owned.length+" release"+(owned.length!==1?"s":"");
+    badge.className="range-badge";cb.style.display="inline";panel.classList.add("accent");
+  } else {
+    badge.textContent="All "+ALL_RELEASES.length+" releases";
+    badge.className="range-badge dim";cb.style.display="none";panel.classList.remove("accent");
+  }
+}
+
+document.getElementById("oldest-input").addEventListener("keydown",e=>{if(e.key==="Enter")applyRange();});
+document.getElementById("newest-input").addEventListener("keydown",e=>{if(e.key==="Enter")applyRange();});
+document.getElementById("playlist-name").addEventListener("keydown",e=>{if(e.key==="Enter")savePlaylist();});
+
+function savePlaylist(){
+  const ne=document.getElementById("playlist-name");
+  const name=ne.value.trim()||"Class "+(savedList.length+1);
+  savedList.push({name,playlist:JSON.parse(JSON.stringify(playlist)),id:Date.now()});
+  try{localStorage.setItem("bc_saved",JSON.stringify(savedList));}catch(e){}
+  ne.value="";renderSavedBtn();if(showingSaved)renderSavedList();
+}
+
+function persistSaved(){try{localStorage.setItem("bc_saved",JSON.stringify(savedList));}catch(e){}}
+
+function renderSavedBtn(){
+  const btn=document.getElementById("saved-btn");
+  if(savedList.length){btn.style.display="inline";btn.textContent="Saved ("+savedList.length+")";}
+  else{btn.style.display="none";showingSaved=false;document.getElementById("saved-list").style.display="none";}
+}
+
+function toggleSaved(){
+  showingSaved=!showingSaved;
+  const el=document.getElementById("saved-list");
+  el.style.display=showingSaved?"block":"none";
+  if(showingSaved)renderSavedList();
+}
+
+function renderSavedList(){
+  const el=document.getElementById("saved-list");el.innerHTML="";
+  savedList.forEach((s,i)=>{
+    const row=document.createElement("div");row.className="saved-item";
+    row.innerHTML='<span class="saved-name">'+s.name+'</span>';
+    const lb=document.createElement("button");lb.className="btn btn-load";lb.textContent="Load";
+    lb.addEventListener("click",()=>{playlist=JSON.parse(JSON.stringify(s.playlist));renderAll();showingSaved=false;el.style.display="none";});
+    const db=document.createElement("button");db.className="btn btn-del";db.textContent="X";
+    db.addEventListener("click",()=>{savedList.splice(i,1);persistSaved();renderSavedBtn();renderSavedList();});
+    row.append(lb,db);el.appendChild(row);
+  });
+}
+
+function copyPlaylist(){
+  const lines=[];
+  const wuParts=WARMUP_IDS.map(id=>playlist[id]?.song).filter(Boolean);
+  if(wuParts.length){
+    const wuRel=playlist["1a"]?.release||"";
+    lines.push("Track 1: Warm-Up\n  "+wuParts.join(" / ")+(wuRel?" [BC"+wuRel+"]":""));
+  }
+  STANDARD_TRACKS.forEach(t=>{
+    const p=playlist[t.id];
+    const k=t.isT5&&p.t5kind?" ("+p.t5kind+")":"";
+    const b=p.label?" ["+p.label+"]":"";
+    lines.push(t.label+": "+t.name+"\n  "+(p.song||"(not set)")+k+b+(p.release?" [BC"+p.release+"]":""));
+  });
+  const text=lines.join("\n");
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById("copy-btn");
+    btn.textContent="Copied!";btn.classList.add("copied");
+    setTimeout(()=>{btn.innerHTML="&#x1F4CB; Copy";btn.classList.remove("copied");},1800);
+  }).catch(()=>{
+    const ta=document.createElement("textarea");ta.value=text;
+    ta.style.cssText="position:fixed;opacity:0";
+    document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);
+  });
+}
+
+function loadFromStorage(){
+  try{
+    const sv=localStorage.getItem("bc_saved");if(sv)savedList=JSON.parse(sv);
+    const lo=localStorage.getItem("bc_oldest"),hi=localStorage.getItem("bc_newest");
+    if(lo){oldest=lo;document.getElementById("oldest-input").value=lo;}
+    if(hi){newest=hi;document.getElementById("newest-input").value=hi;}
+  }catch(e){}
+}
+
+loadFromStorage();updateRangeBadge();renderAll();renderSavedBtn();
+</script>
+</body>
+</html>
